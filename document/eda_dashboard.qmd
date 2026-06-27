@@ -1,210 +1,266 @@
 ---
-title: "gapminder EDA 대시보드"
+title: "Gapminder · 55년간의 삶, 부, 그리고 불평등"
 author: "오선민"
 date: "2026-06-27"
 lang: ko
 format:
   dashboard:
-    theme: cosmo
-    nav-buttons: [github]
+    theme: [cosmo, dashboard.scss]
     orientation: rows
+    nav-buttons:
+      - icon: github
+        href: https://github.com/oseonmin/gapminder
     embed-resources: true
 execute:
   echo: false
   warning: false
   message: false
-knitr:
-  opts_chunk:
-    dev: "png"
-    dpi: 120
 ---
 
 ```{r setup}
 #| include: false
 options(scipen = 100)
+suppressPackageStartupMessages({
+  library(ggplot2); library(dplyr); library(tidyr); library(scales)
+  library(plotly); library(DT)
+})
 
-# 루트/ document 어느 곳에서 렌더해도 동작
 data_path <- if (file.exists("data/gapminder.csv")) "data/gapminder.csv" else "../data/gapminder.csv"
 df <- read.csv(data_path, stringsAsFactors = FALSE)
-df$continent <- factor(df$continent)
+df$continent <- factor(df$continent, levels = c("Africa", "Americas", "Asia", "Europe", "Oceania"))
 
-cagr <- function(v0, v1, years) (v1 / v0)^(1 / years) - 1
-kab  <- function(x, ...) knitr::kable(x, format.args = list(big.mark = ","), ...)
+# 대륙 팔레트 (Tableau 계열, 색약 친화)
+cont_pal <- c(Africa = "#E45756", Americas = "#4C78A8", Asia = "#F58518",
+              Europe = "#54A24B", Oceania = "#B279A2")
 
-cont_levels <- levels(df$continent)
-pal <- c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00")
-cont_col <- setNames(pal[seq_along(cont_levels)], cont_levels)
+# 공통 테마
+theme_dash <- theme_minimal(base_size = 13) +
+  theme(panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold"),
+        legend.title = element_blank(),
+        plot.margin = margin(8, 12, 8, 8))
+theme_set(theme_dash)
 
-d07 <- df[df$year == 2007, ]
+# plotly 래퍼
+gg2 <- function(p, legend = TRUE) {
+  ggplotly(p, tooltip = "text") |>
+    config(displayModeBar = FALSE) |>
+    layout(legend = list(orientation = "h", x = 0, y = -0.18,
+                         title = list(text = "")),
+           margin = list(t = 30),
+           font = list(family = "system-ui"))
+}
+dt <- function(x, ...) datatable(x, rownames = FALSE, class = "compact stripe hover",
+  options = list(dom = "ftp", pageLength = 10, scrollY = "320px", scrollCollapse = TRUE,
+                 language = list(search = "검색:", paginate = list(previous = "이전", `next` = "다음"))),
+  ...)
 
-# 연도별 단순/가중 평균
-simple <- aggregate(cbind(lifeExp, gdpPercap) ~ year, data = df, FUN = mean)
-weighted <- do.call(rbind, lapply(split(df, df$year), function(d) data.frame(
-  year = d$year[1],
-  lifeExp_w = weighted.mean(d$lifeExp, d$pop),
-  gdpPercap_w = weighted.mean(d$gdpPercap, d$pop))))
-comp <- merge(simple, weighted, by = "year")
+d07 <- filter(df, year == 2007)
 
-# 격차 추세
-disp <- do.call(rbind, lapply(split(df, df$year), function(d) data.frame(
-  year = d$year[1],
-  sd_life = sd(d$lifeExp),
-  ratio_gdp = max(d$gdpPercap) / min(d$gdpPercap))))
+# ---- 핵심 지표 ----
+life_2007_w <- round(weighted.mean(d07$lifeExp, d07$pop), 1)
+comp_w <- df |> group_by(year) |>
+  summarise(simple = mean(lifeExp), weighted = weighted.mean(lifeExp, pop),
+            gdp_s = mean(gdpPercap), gdp_w = weighted.mean(gdpPercap, pop), .groups = "drop")
+life_gain <- round(tail(comp_w$weighted, 1) - head(comp_w$weighted, 1), 1)
+top_c <- d07$country[which.max(d07$lifeExp)]; top_v <- max(d07$lifeExp)
+bot_c <- d07$country[which.min(d07$lifeExp)]; bot_v <- min(d07$lifeExp)
+life_gap <- round(top_v - bot_v, 1)
 
 # 회귀
-m1 <- lm(lifeExp ~ log(gdpPercap), data = df)
-r2 <- summary(m1)$r.squared
-
-# 국가별 변화
-first <- df[df$year == min(df$year), ]; last <- df[df$year == max(df$year), ]
-chg <- merge(first[c("country", "continent", "lifeExp", "gdpPercap")],
-             last[c("country", "lifeExp", "gdpPercap")], by = "country",
-             suffixes = c("_1952", "_2007"))
-chg$lifeExp_증감 <- round(chg$lifeExp_2007 - chg$lifeExp_1952, 2)
-chg$CAGR <- cagr(chg$gdpPercap_1952, chg$gdpPercap_2007, 55)
-
-life_2007_w <- round(weighted.mean(d07$lifeExp, d07$pop), 1)
-gdp_2007_w  <- round(weighted.mean(d07$gdpPercap, d07$pop), 0)
-
-# 기대수명(생명) 중심 핵심 지표
-life_gain   <- round(tail(comp$lifeExp_w, 1) - head(comp$lifeExp_w, 1), 1)  # 1952->2007 인구가중 향상폭
-top_country <- d07$country[which.max(d07$lifeExp)]   # 최장수국
-bot_country <- d07$country[which.min(d07$lifeExp)]   # 최단명국
-life_gap_07 <- round(max(d07$lifeExp) - min(d07$lifeExp), 1)  # 최장수-최단명 격차
+m1 <- lm(lifeExp ~ log(gdpPercap), data = df); r2 <- summary(m1)$r.squared
 ```
 
-# 개요 {orientation="rows"}
+# 한눈에 보기
 
-## Row {height="30%"}
+## Row {height="28%"}
 
 ```{r}
 #| content: valuebox
 #| title: "세계 기대수명 (2007, 인구가중)"
-list(icon = "heart-pulse-fill", color = "primary",
-     value = sprintf("%.1f세", life_2007_w))
+list(icon = "heart-pulse-fill", color = "primary", value = sprintf("%.1f세", life_2007_w))
 ```
 
 ```{r}
 #| content: valuebox
-#| title: "기대수명 향상 (1952→2007)"
-list(icon = "graph-up-arrow", color = "success",
-     value = sprintf("+%.1f세", life_gain))
+#| title: "55년간 향상 (1952→2007)"
+list(icon = "graph-up-arrow", color = "success", value = sprintf("+%.1f세", life_gain))
 ```
 
 ```{r}
 #| content: valuebox
-#| title: "생명 격차 (최장수국−최단명국, 2007)"
-list(icon = "hourglass-split", color = "danger",
-     value = sprintf("%.1f세", life_gap_07))
+#| title: "생명 격차 (최장수국−최단명국)"
+list(icon = "hourglass-split", color = "danger", value = sprintf("%.1f세", life_gap))
 ```
 
-## Row {height="70%"}
+## Row {height="72%"}
 
-### Column {width="60%"}
+### Column {width="65%"}
 
 ```{r}
-#| title: "Rosling 버블차트 (2007) — GDP × 기대수명, 버블=인구"
-ord <- order(-d07$pop)
-bcex <- 1 + 8 * sqrt(d07$pop[ord]) / sqrt(max(d07$pop))
-plot(d07$gdpPercap[ord], d07$lifeExp[ord], log = "x", pch = 21, cex = bcex, col = "white",
-     bg = adjustcolor(cont_col[as.character(d07$continent[ord])], 0.7),
-     xlab = "gdpPercap (log scale)", ylab = "lifeExp")
-legend("bottomright", legend = cont_levels, pt.bg = cont_col, pch = 21, col = "white", bty = "n")
+#| title: "소득과 수명의 지도 (2007) — 버블=인구, 색=대륙"
+d <- d07 |> arrange(desc(pop)) |>
+  mutate(tip = sprintf("<b>%s</b> (%s)<br>1인당 GDP: $%s<br>기대수명: %.1f세<br>인구: %s",
+                       country, continent, comma(round(gdpPercap)), lifeExp, comma(pop)))
+p <- ggplot(d, aes(gdpPercap, lifeExp, size = pop, color = continent, text = tip)) +
+  geom_point(alpha = 0.72) +
+  scale_x_log10(labels = label_dollar(scale_cut = cut_short_scale())) +
+  scale_size(range = c(2.5, 20), guide = "none") +
+  scale_color_manual(values = cont_pal) +
+  labs(x = "1인당 GDP (로그 스케일)", y = "기대수명 (세)")
+gg2(p)
 ```
 
-### Column {width="40%"}
+### Column {width="35%"}
+
+::: {.card title="핵심 인사이트"}
+
+**부유할수록 오래 산다 — 단, 로그적으로.**
+1인당 GDP가 10배 늘 때 기대수명은 약 `r round(coef(m1)[2]*log(10),1)`세 증가한다. 저소득 구간의 소득 향상이 수명에 특히 큰 영향을 준다 (R² = `r round(r2,2)`).
+
+**가장 긴 삶과 가장 짧은 삶의 거리, `r life_gap`세.**
+2007년 `r top_c`(`r round(top_v,1)`세)와 `r bot_c`(`r round(bot_v,1)`세)의 격차. 한 사람의 일생만큼의 차이가 국적 하나로 갈린다.
+
+**대륙은 여전히 운명을 가른다.**
+유럽·오세아니아는 최상위, 아프리카는 최하위에 머문다. 버블 지도의 좌하단(아프리카)과 우상단(유럽)의 분리를 보라.
+
+:::
 
 ```{r}
 #| title: "대륙별 요약 (2007, 인구가중)"
-cont07 <- do.call(rbind, lapply(split(d07, d07$continent), function(d) data.frame(
-  대륙 = as.character(d$continent[1]),
-  국가수 = nrow(d),
-  기대수명 = round(weighted.mean(d$lifeExp, d$pop), 1),
-  GDP = round(weighted.mean(d$gdpPercap, d$pop), 0))))
-kab(cont07, row.names = FALSE)
+d07 |> group_by(대륙 = continent) |>
+  summarise(국가수 = n(), `기대수명(세)` = round(weighted.mean(lifeExp, pop), 1),
+            `1인당GDP($)` = round(weighted.mean(gdpPercap, pop)), .groups = "drop") |>
+  datatable(rownames = FALSE, class = "compact stripe",
+            options = list(dom = "t", ordering = TRUE)) |>
+  formatCurrency("1인당GDP($)", "$", digits = 0)
 ```
 
-```{r}
-#| title: "대륙별 기대수명 분포 (2007)"
-boxplot(lifeExp ~ continent, data = d07,
-        col = cont_col[sort(unique(as.character(d07$continent)))],
-        xlab = "", ylab = "lifeExp")
-```
-
-# 추세 분석
+# 진보와 격차
 
 ## Row
 
 ```{r}
-#| title: "전세계 평균 기대수명: 단순 vs 인구가중"
-plot(comp$year, comp$lifeExp, type = "b", pch = 19, col = "gray40",
-     ylim = range(c(comp$lifeExp, comp$lifeExp_w)), xlab = "year", ylab = "lifeExp")
-lines(comp$year, comp$lifeExp_w, type = "b", pch = 17, col = "darkred", lwd = 2)
-legend("bottomright", c("단순평균", "인구가중"), col = c("gray40", "darkred"),
-       pch = c(19, 17), lwd = c(1, 2), bty = "n")
+#| title: "기대수명의 상승 — 대륙별 (인구가중)"
+trend <- df |> group_by(year, continent) |>
+  summarise(lifeExp = weighted.mean(lifeExp, pop), .groups = "drop") |>
+  mutate(tip = sprintf("%s · %d년<br>%.1f세", continent, year, lifeExp))
+p <- ggplot(trend, aes(year, lifeExp, color = continent, group = continent, text = tip)) +
+  geom_line(linewidth = 1.1) + geom_point(size = 1.6) +
+  scale_color_manual(values = cont_pal) +
+  labs(x = NULL, y = "기대수명 (세)")
+gg2(p)
 ```
 
 ```{r}
-#| title: "lifeExp vs log(GDP) + 회귀선"
-plot(df$gdpPercap, df$lifeExp, log = "x",
-     col = adjustcolor(cont_col[as.character(df$continent)], 0.5), pch = 19, cex = 0.6,
-     xlab = "gdpPercap (log)", ylab = "lifeExp")
-xs <- seq(min(df$gdpPercap), max(df$gdpPercap), length.out = 200)
-lines(xs, predict(m1, newdata = data.frame(gdpPercap = xs)), col = "black", lwd = 2)
-legend("bottomright", legend = cont_levels, col = cont_col, pch = 19, bty = "n")
+#| title: "평균의 함정 — 단순 vs 인구가중 세계 평균"
+cw <- comp_w |>
+  mutate(t1 = sprintf("%d년<br>단순: %.1f세", year, simple),
+         t2 = sprintf("%d년<br>인구가중: %.1f세", year, weighted))
+p <- ggplot(cw, aes(x = year)) +
+  geom_line(aes(y = simple, text = t1), color = "#9aa0a6", linewidth = 1) +
+  geom_point(aes(y = simple, text = t1), color = "#9aa0a6", size = 1.6) +
+  geom_line(aes(y = weighted, text = t2), color = "#C0392B", linewidth = 1.2) +
+  geom_point(aes(y = weighted, text = t2), color = "#C0392B", size = 1.8) +
+  annotate("text", x = 1990, y = max(cw$simple) - 1.5, label = "단순평균", color = "#9aa0a6") +
+  annotate("text", x = 1990, y = max(cw$weighted) + 1.2, label = "인구가중", color = "#C0392B") +
+  labs(x = NULL, y = "세계 평균 기대수명 (세)")
+gg2(p)
 ```
 
 ## Row
 
 ```{r}
-#| title: "국가 간 기대수명 표준편차 (수렴)"
-plot(disp$year, disp$sd_life, type = "b", pch = 19, col = "darkgreen",
-     xlab = "year", ylab = "SD of lifeExp")
+#| title: "수명은 좁혀지고 (국가 간 표준편차 ↓)"
+disp <- df |> group_by(year) |>
+  summarise(sd_life = sd(lifeExp), ratio = max(gdpPercap) / min(gdpPercap), .groups = "drop")
+p <- ggplot(disp, aes(year, sd_life, text = sprintf("%d년<br>SD: %.1f세", year, sd_life))) +
+  geom_area(fill = "#54A14B22") +
+  geom_line(color = "#2E7D32", linewidth = 1.2, group = 1) + geom_point(color = "#2E7D32") +
+  labs(x = NULL, y = "기대수명 표준편차 (세)")
+gg2(p)
 ```
 
 ```{r}
-#| title: "GDP 최고/최저 배수 (발산)"
-plot(disp$year, disp$ratio_gdp, type = "b", pch = 19, col = "darkred",
-     xlab = "year", ylab = "max/min ratio")
+#| title: "부의 격차는 벌어진다 (최고/최저 GDP 배수 ↑)"
+p <- ggplot(disp, aes(year, ratio, text = sprintf("%d년<br>%.0f배", year, ratio))) +
+  geom_area(fill = "#E4575622") +
+  geom_line(color = "#C0392B", linewidth = 1.2, group = 1) + geom_point(color = "#C0392B") +
+  labs(x = NULL, y = "최고/최저 1인당 GDP (배)")
+gg2(p)
 ```
 
-# 순위 & 변화
+# 부와 수명
+
+## Row {height="60%"}
+
+```{r}
+#| title: "소득–수명의 로그 선형 관계 (전체 연도)"
+dd <- df |> mutate(tip = sprintf("<b>%s</b> %d<br>GDP $%s · %.1f세",
+                                 country, year, comma(round(gdpPercap)), lifeExp))
+p <- ggplot(dd, aes(gdpPercap, lifeExp)) +
+  geom_point(aes(color = continent, text = tip), alpha = 0.45, size = 1.4) +
+  geom_smooth(method = "lm", formula = y ~ x, se = TRUE, color = "#222222", linewidth = 1) +
+  scale_x_log10(labels = label_dollar(scale_cut = cut_short_scale())) +
+  scale_color_manual(values = cont_pal) +
+  labs(x = "1인당 GDP (로그 스케일)", y = "기대수명 (세)")
+gg2(p)
+```
+
+## Row {height="40%"}
+
+::: {.card title="해석"}
+- 회귀식: **기대수명 = `r round(coef(m1)[1],1)` + `r round(coef(m1)[2],1)` × ln(1인당 GDP)**, **R² = `r round(r2,3)`**
+- 소득이 **10배** 늘면 기대수명은 약 **`r round(coef(m1)[2]*log(10),1)`세** 증가 — 가난한 나라일수록 소득 증가 효과가 크고(가파른 좌측), 부유한 나라에서는 둔화된다(완만한 우측).
+- 같은 소득대라도 대륙별로 점들이 위아래로 갈리는 것은, 소득 외 보건·제도 요인이 수명에 작용함을 시사한다.
+:::
+
+```{r}
+#| title: "기대수명이 후퇴한 국가 (1952 → 2007)"
+chg <- inner_join(
+  filter(df, year == 1952) |> select(country, continent, l1952 = lifeExp),
+  filter(df, year == 2007) |> select(country, l2007 = lifeExp), by = "country") |>
+  mutate(증감 = round(l2007 - l1952, 1)) |> filter(증감 < 0) |> arrange(증감) |>
+  transmute(국가 = country, 대륙 = continent, `1952` = round(l1952,1), `2007` = round(l2007,1), `증감(세)` = 증감)
+dt(chg)
+```
+
+# 국가 탐색
 
 ## Row {.tabset}
 
 ```{r}
-#| title: "GDP 성장률(CAGR) 상위 10"
-t <- head(chg[order(-chg$CAGR), c("country", "continent", "CAGR")], 10)
-t$CAGR <- sprintf("%.2f%%", t$CAGR * 100)
-kab(t, row.names = FALSE)
+#| title: "🏆 기대수명 상위"
+d07 |> arrange(desc(lifeExp)) |>
+  transmute(순위 = row_number(), 국가 = country, 대륙 = continent,
+            `기대수명(세)` = round(lifeExp, 1), `1인당GDP($)` = round(gdpPercap)) |>
+  dt() |> formatCurrency("1인당GDP($)", "$", digits = 0)
 ```
 
 ```{r}
-#| title: "GDP 성장률(CAGR) 하위 10"
-t <- head(chg[order(chg$CAGR), c("country", "continent", "CAGR")], 10)
-t$CAGR <- sprintf("%.2f%%", t$CAGR * 100)
-kab(t, row.names = FALSE)
+#| title: "⚠️ 기대수명 하위"
+d07 |> arrange(lifeExp) |>
+  transmute(순위 = row_number(), 국가 = country, 대륙 = continent,
+            `기대수명(세)` = round(lifeExp, 1), `1인당GDP($)` = round(gdpPercap)) |>
+  dt() |> formatCurrency("1인당GDP($)", "$", digits = 0)
 ```
 
 ```{r}
-#| title: "기대수명 감소 국가"
-decl <- chg[chg$lifeExp_증감 < 0, c("country", "continent", "lifeExp_1952", "lifeExp_2007", "lifeExp_증감")]
-kab(decl[order(decl$lifeExp_증감), ], row.names = FALSE)
+#| title: "🚀 1952→2007 GDP 성장률"
+inner_join(
+  filter(df, year == 1952) |> select(country, continent, g1952 = gdpPercap),
+  filter(df, year == 2007) |> select(country, g2007 = gdpPercap), by = "country") |>
+  mutate(CAGR = (g2007/g1952)^(1/55) - 1) |> arrange(desc(CAGR)) |>
+  transmute(순위 = row_number(), 국가 = country, 대륙 = continent,
+            `연평균성장률` = CAGR, `2007 GDP($)` = round(g2007)) |>
+  dt() |> formatPercentage("연평균성장률", 2) |> formatCurrency("2007 GDP($)", "$", digits = 0)
 ```
 
 ## Row {.tabset}
 
 ```{r}
-#| title: "2007 기대수명 상위 10"
-kab(head(d07[order(-d07$lifeExp), c("country", "continent", "lifeExp")], 10), row.names = FALSE)
-```
-
-```{r}
-#| title: "2007 기대수명 하위 10"
-kab(head(d07[order(d07$lifeExp), c("country", "continent", "lifeExp")], 10), row.names = FALSE)
-```
-
-```{r}
-#| title: "2007 1인당 GDP 상위 10"
-kab(head(d07[order(-d07$gdpPercap), c("country", "continent", "gdpPercap")], 10), row.names = FALSE)
+#| title: "전체 데이터 (2007)"
+d07 |> transmute(국가 = country, 대륙 = continent, `인구` = pop,
+                 `기대수명(세)` = round(lifeExp,1), `1인당GDP($)` = round(gdpPercap)) |>
+  dt() |> formatCurrency("인구", "", digits = 0) |> formatCurrency("1인당GDP($)", "$", digits = 0)
 ```
