@@ -1,0 +1,280 @@
+---
+title: "gapminder 탐색적 데이터 분석(EDA) 보고서"
+subtitle: "최종 보강판 — 분포·가중평균·변화·격차·회귀"
+author: "오선민"
+date: "2026-06-27"
+lang: ko
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "목차"
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    theme: cosmo
+    fig-width: 8
+    fig-height: 5
+    df-print: kable
+execute:
+  echo: true
+  warning: false
+  message: false
+knitr:
+  opts_chunk:
+    dev: "png"
+    dpi: 110
+---
+
+```{r setup}
+#| include: false
+options(scipen = 100)
+knitr::opts_chunk$set(fig.align = "center")
+
+# 루트/ document 어느 곳에서 렌더해도 동작하도록 경로 자동 탐색
+data_path <- if (file.exists("data/gapminder.csv")) "data/gapminder.csv" else "../data/gapminder.csv"
+
+df <- read.csv(data_path, stringsAsFactors = FALSE)
+df$continent <- factor(df$continent)
+
+# 외부 패키지 없이 쓰는 보조 함수
+skewness <- function(x) { x <- x[!is.na(x)]; n <- length(x); m <- mean(x); s <- sd(x); (sum((x - m)^3) / n) / s^3 }
+kurtosis <- function(x) { x <- x[!is.na(x)]; n <- length(x); m <- mean(x); s <- sd(x); (sum((x - m)^4) / n) / s^4 - 3 }
+cagr     <- function(v0, v1, years) (v1 / v0)^(1 / years) - 1
+kab      <- function(x, ...) knitr::kable(x, format.args = list(big.mark = ","), ...)
+
+cont_levels <- levels(df$continent)
+pal <- c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00")
+cont_col <- setNames(pal[seq_along(cont_levels)], cont_levels)
+```
+
+> 본 보고서는 `data/gapminder.csv`를 대상으로 한 탐색적 데이터 분석이다.
+> 초판 EDA의 한계(단순평균의 편향, 분포 형태 미검토, 변화·역전·격차 분석 부재, 정량 모델 부재)를 비판적으로 보완했다.
+> 모든 표·그래프는 본 문서 렌더 시 R 코드로 재현된다.
+
+# 데이터 무결성 재확인
+
+```{r integrity}
+data.frame(
+  항목 = c("행", "열", "기간", "연도 수", "국가 수", "대륙 수",
+           "결측치 합", "완전중복", "(country,year) 키중복"),
+  값 = c(nrow(df), ncol(df),
+         sprintf("%d~%d", min(df$year), max(df$year)),
+         length(unique(df$year)), length(unique(df$country)), nlevels(df$continent),
+         sum(is.na(df)), sum(duplicated(df)), sum(duplicated(df[c("country", "year")])))
+) |> kab()
+```
+
+결측·중복·키중복이 모두 0으로 분석 가능한 상태다.
+
+# 분포 형태 (왜도/첨도)
+
+요약통계가 숨기는 비대칭성을 확인한다.
+
+```{r shape}
+vars <- c("pop", "lifeExp", "gdpPercap")
+shape <- data.frame(
+  변수 = vars,
+  평균 = sapply(vars, function(c) mean(df[[c]])),
+  중앙값 = sapply(vars, function(c) median(df[[c]])),
+  왜도 = round(sapply(vars, function(c) skewness(df[[c]])), 3),
+  초과첨도 = round(sapply(vars, function(c) kurtosis(df[[c]])), 3)
+)
+kab(shape)
+```
+
+로그변환 후 왜도: `log(pop)` = `r round(skewness(log(df$pop)),3)`, `log(gdpPercap)` = `r round(skewness(log(df$gdpPercap)),3)`.
+
+`pop`·`gdpPercap`은 강한 우편향(로그정규에 가까움)으로, **평균보다 중앙값·로그척도**가 적절하다.
+
+```{r hist-raw-log}
+#| fig-cap: "gdpPercap 원척도 vs 로그척도 분포"
+#| fig-width: 10
+#| fig-height: 4
+par(mfrow = c(1, 2))
+hist(df$gdpPercap, breaks = 40, col = "tomato", border = "white",
+     main = "gdpPercap (원척도)", xlab = "gdpPercap")
+hist(log10(df$gdpPercap), breaks = 40, col = "steelblue", border = "white",
+     main = "log10(gdpPercap)", xlab = "log10(gdpPercap)")
+```
+
+# 이상치 탐지 (IQR 1.5배 규칙)
+
+```{r outliers}
+out_tbl <- do.call(rbind, lapply(c("lifeExp", "gdpPercap", "pop"), function(col) {
+  q <- quantile(df[[col]], c(.25, .75)); iqr <- diff(q)
+  lo <- q[1] - 1.5 * iqr; hi <- q[2] + 1.5 * iqr
+  out <- df[df[[col]] < lo | df[[col]] > hi, ]
+  top <- if (nrow(out)) paste(utils::head(sprintf("%s(%d)",
+            out$country[order(-out[[col]])], out$year[order(-out[[col]])]), 3), collapse = ", ") else "-"
+  data.frame(변수 = col, 이상치수 = nrow(out), 상위사례 = top)
+}))
+kab(out_tbl)
+```
+
+이상치는 오류가 아니라 **구조적 특수성**(산유국 고소득, 거대 인구국)이므로 제거가 아닌 맥락으로 해석한다.
+
+# 단순평균 vs 인구가중 평균 ⭐
+
+국가 단순평균은 인구 30만 소국과 13억 대국을 동일 취급한다. 인구가중 평균으로 보정한다.
+
+```{r weighted}
+simple <- aggregate(cbind(lifeExp, gdpPercap) ~ year, data = df, FUN = mean)
+weighted <- do.call(rbind, lapply(split(df, df$year), function(d) data.frame(
+  year = d$year[1],
+  lifeExp_w = weighted.mean(d$lifeExp, d$pop),
+  gdpPercap_w = weighted.mean(d$gdpPercap, d$pop)
+)))
+comp <- merge(simple, weighted, by = "year")
+comp_tbl <- data.frame(
+  연도 = comp$year,
+  lifeExp_단순 = round(comp$lifeExp, 1), lifeExp_가중 = round(comp$lifeExp_w, 1),
+  GDP_단순 = round(comp$gdpPercap, 0), GDP_가중 = round(comp$gdpPercap_w, 0))
+kab(comp_tbl)
+```
+
+```{r weighted-plot}
+#| fig-cap: "전세계 평균 기대수명: 단순 vs 인구가중"
+plot(comp$year, comp$lifeExp, type = "b", pch = 19, col = "gray40",
+     ylim = range(c(comp$lifeExp, comp$lifeExp_w)),
+     xlab = "year", ylab = "lifeExp", main = "단순 vs 인구가중 평균 기대수명")
+lines(comp$year, comp$lifeExp_w, type = "b", pch = 17, col = "darkred", lwd = 2)
+legend("bottomright", c("단순평균", "인구가중평균"),
+       col = c("gray40", "darkred"), pch = c(19, 17), lwd = c(1, 2), bty = "n")
+```
+
+2007년 기대수명은 단순 `r round(tail(comp$lifeExp,1),1)`세, 인구가중 `r round(tail(comp$lifeExp_w,1),1)`세다.
+인구 많은 국가(중국·인도 등)가 다수 소국보다 수명이 높아 **가중평균이 더 높다** — 어떤 평균을 쓰느냐에 따라 결론이 달라지므로 가중 여부를 반드시 명시해야 한다.
+
+# 국가별 변화 (1952 → 2007): 성장과 역전 ⭐
+
+```{r change}
+first <- df[df$year == min(df$year), ]
+last  <- df[df$year == max(df$year), ]
+chg <- merge(first[c("country", "continent", "lifeExp", "gdpPercap")],
+             last[c("country", "lifeExp", "gdpPercap")], by = "country",
+             suffixes = c("_1952", "_2007"))
+chg$lifeExp_증감 <- round(chg$lifeExp_2007 - chg$lifeExp_1952, 2)
+chg$gdp_CAGR <- cagr(chg$gdpPercap_1952, chg$gdpPercap_2007, 55)
+```
+
+GDP 연평균성장률(CAGR) 상위 5개국:
+
+```{r cagr-top}
+top5 <- utils::head(chg[order(-chg$gdp_CAGR), c("country", "continent", "gdp_CAGR")], 5)
+top5$gdp_CAGR <- sprintf("%.2f%%", top5$gdp_CAGR * 100)
+kab(top5, row.names = FALSE)
+```
+
+GDP 연평균성장률(CAGR) 하위 5개국:
+
+```{r cagr-bottom}
+bot5 <- utils::head(chg[order(chg$gdp_CAGR), c("country", "continent", "gdp_CAGR")], 5)
+bot5$gdp_CAGR <- sprintf("%.2f%%", bot5$gdp_CAGR * 100)
+kab(bot5, row.names = FALSE)
+```
+
+기대수명이 1952년보다 **감소**한 국가:
+
+```{r decline}
+decl <- chg[chg$lifeExp_증감 < 0, c("country", "continent", "lifeExp_1952", "lifeExp_2007", "lifeExp_증감")]
+decl <- decl[order(decl$lifeExp_증감), ]
+kab(decl, row.names = FALSE)
+```
+
+전 세계가 향상되는 가운데서도 일부 국가는 후퇴(에이즈 유행·분쟁·체제 붕괴 등)했다. 단순 전체 평균은 이런 역전을 가린다 — gapminder의 핵심 통찰이다.
+
+# 국가 간 격차 추세 — 수렴 vs 발산
+
+```{r dispersion}
+disp <- do.call(rbind, lapply(split(df, df$year), function(d) data.frame(
+  연도 = d$year[1],
+  lifeExp_표준편차 = round(sd(d$lifeExp), 1),
+  GDP_표준편차 = round(sd(d$gdpPercap), 1),
+  GDP_빈부격차배수 = round(max(d$gdpPercap) / min(d$gdpPercap), 1)
+)))
+kab(disp, row.names = FALSE)
+```
+
+```{r dispersion-plot}
+#| fig-cap: "국가 간 격차: 기대수명 수렴 vs 소득 발산"
+#| fig-width: 10
+#| fig-height: 4
+par(mfrow = c(1, 2))
+plot(disp$연도, disp$lifeExp_표준편차, type = "b", pch = 19, col = "darkgreen",
+     main = "기대수명 표준편차 (수렴)", xlab = "year", ylab = "SD")
+plot(disp$연도, disp$GDP_빈부격차배수, type = "b", pch = 19, col = "darkred",
+     main = "GDP 최고/최저 배수 (발산)", xlab = "year", ylab = "max/min")
+```
+
+기대수명은 국가 간 격차가 좁혀지는(수렴) 반면, 소득 격차는 후반부에 벌어지는(발산) 비대칭 양상이다.
+
+# 정량 모델 — 회귀분석
+
+```{r regression}
+m1 <- lm(lifeExp ~ log(gdpPercap), data = df)
+m2 <- lm(lifeExp ~ log(gdpPercap) + continent + year, data = df)
+s1 <- summary(m1)
+```
+
+- 단순 모형: `lifeExp = `r round(coef(m1)[1],2)` + `r round(coef(m1)[2],2)` × log(gdpPercap)`, **R² = `r round(s1$r.squared,3)`**
+- 통제 모형(`+ continent + year`): **R² = `r round(summary(m2)$r.squared,3)`**
+- 상관계수: 선형 `r round(cor(df$lifeExp, df$gdpPercap),3)` → 로그변환 후 `r round(cor(df$lifeExp, log(df$gdpPercap)),3)`
+
+```{r regression-plot}
+#| fig-cap: "lifeExp vs log(gdpPercap) + 회귀선"
+plot(df$gdpPercap, df$lifeExp, log = "x",
+     col = adjustcolor(cont_col[as.character(df$continent)], 0.5), pch = 19, cex = 0.6,
+     xlab = "gdpPercap (log)", ylab = "lifeExp",
+     main = sprintf("lifeExp ~ log(GDP) | R^2=%.3f", s1$r.squared))
+xs <- seq(min(df$gdpPercap), max(df$gdpPercap), length.out = 200)
+lines(xs, predict(m1, newdata = data.frame(gdpPercap = xs)), col = "black", lwd = 2)
+legend("bottomright", legend = cont_levels, col = cont_col, pch = 19, bty = "n")
+```
+
+소득과 수명은 단순 선형이 아니라 **로그 선형 관계**다. 저소득 구간에서 소득 증가가 수명을 크게 끌어올리고, 고소득 구간에서 둔화된다(수확체감).
+
+# 대륙별 요약 (2007, 인구가중)
+
+```{r continent-2007}
+d07 <- df[df$year == 2007, ]
+cont07 <- do.call(rbind, lapply(split(d07, d07$continent), function(d) data.frame(
+  대륙 = as.character(d$continent[1]),
+  국가수 = nrow(d),
+  총인구 = sum(d$pop),
+  기대수명_가중 = round(weighted.mean(d$lifeExp, d$pop), 1),
+  GDP_가중 = round(weighted.mean(d$gdpPercap, d$pop), 0)
+)))
+kab(cont07, row.names = FALSE)
+```
+
+## Rosling 버블차트 (2007)
+
+```{r bubble}
+#| fig-cap: "GDP × 기대수명, 버블=인구, 색=대륙 (2007)"
+#| fig-width: 9
+#| fig-height: 6
+ord <- order(-d07$pop)
+bcex <- 1 + 8 * sqrt(d07$pop[ord]) / sqrt(max(d07$pop))
+plot(d07$gdpPercap[ord], d07$lifeExp[ord], log = "x", pch = 21, cex = bcex, col = "white",
+     bg = adjustcolor(cont_col[as.character(d07$continent[ord])], 0.7),
+     xlab = "gdpPercap (log scale)", ylab = "lifeExp",
+     main = "Rosling 버블차트 (2007)")
+legend("bottomright", legend = cont_levels, pt.bg = cont_col, pch = 21, col = "white", bty = "n")
+```
+
+# 종합 결론
+
+1. **분포는 로그정규** — pop·GDP는 강한 우편향. 산술평균·선형분석은 부적절, 로그척도가 표준.
+2. **평균의 함정** — 단순 국가평균과 인구가중평균은 결론이 다르다. 가중 여부를 반드시 명시해야 한다.
+3. **전반적 향상 + 국지적 후퇴** — 세계 평균은 개선됐으나 짐바브웨·스와질란드 등은 기대수명이 *감소*했다.
+4. **수명은 수렴, 소득은 발산** — 국가 간 기대수명 격차는 좁혀지는 반면 소득 격차는 벌어진다.
+5. **소득–수명은 로그 선형 (R²=0.65, 통제 시 0.80)** — 빈곤국의 소득 증가가 수명 개선에 특히 효과적.
+6. **성장의 명암** — 동아시아(한국·대만·싱가포르)는 고성장, 일부 아프리카·분쟁국은 마이너스 성장.
+
+---
+
+```{r session}
+#| code-fold: true
+sessionInfo()
+```
