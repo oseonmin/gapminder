@@ -75,7 +75,7 @@ life_gap_07 <- round(max(d07$lifeExp) - min(d07$lifeExp), 1)  # 최장수-최단
 
 # 개요 {orientation="rows"}
 
-## Row {height="20%"}
+## Row {height="30%"}
 
 ```{r}
 #| content: valuebox
@@ -98,7 +98,7 @@ list(icon = "hourglass-split", color = "danger",
      value = sprintf("%.1f세", life_gap_07))
 ```
 
-## Row {height="80%"}
+## Row {height="70%"}
 
 ### Column {width="60%"}
 
