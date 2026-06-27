@@ -4,41 +4,48 @@
     "href": "index.html",
     "title": "gapminder 탐색적 데이터 분석",
     "section": "",
-    "text": "이 사이트는 gapminder 데이터셋(data/gapminder.csv)에 대한 탐색적 데이터 분석(EDA) 결과를 담고 있습니다. 142개국 · 1952~2007년 · 5개 대륙의 인구, 기대수명, 1인당 GDP를 다룹니다.\n\n\n\n\n\n항목\n값\n\n\n\n\n관측치\n1704행 × 6열\n\n\n국가 수\n142\n\n\n대륙 수\n5\n\n\n분석 기간\n1952–2007"
+    "text": "Gapminder 데이터셋(142개국 · 1952–2007 · 5개 대륙)으로 인구, 기대수명, 1인당 GDP를 분석한 프로젝트입니다. 데이터 품질 확인부터 탐색적 분석, 인터랙티브 대시보드까지의 전 과정을 담았습니다."
   },
   {
-    "objectID": "index.html#프로젝트-개요",
-    "href": "index.html#프로젝트-개요",
+    "objectID": "index.html#핵심-지표",
+    "href": "index.html#핵심-지표",
     "title": "gapminder 탐색적 데이터 분석",
-    "section": "",
-    "text": "이 사이트는 gapminder 데이터셋(data/gapminder.csv)에 대한 탐색적 데이터 분석(EDA) 결과를 담고 있습니다. 142개국 · 1952~2007년 · 5개 대륙의 인구, 기대수명, 1인당 GDP를 다룹니다.\n\n\n\n\n\n항목\n값\n\n\n\n\n관측치\n1704행 × 6열\n\n\n국가 수\n142\n\n\n대륙 수\n5\n\n\n분석 기간\n1952–2007"
+    "section": "핵심 지표",
+    "text": "핵심 지표\n\n\n\n❤️ 세계 기대수명\n68.9세 · 2007년 인구가중 평균\n\n\n📈 55년간 향상\n+20세 · 1952 → 2007\n\n\n⏳ 생명 격차\n43세 · 최장수국 − 최단명국"
   },
   {
-    "objectID": "index.html#문서",
-    "href": "index.html#문서",
+    "objectID": "index.html#둘러보기",
+    "href": "index.html#둘러보기",
     "title": "gapminder 탐색적 데이터 분석",
-    "section": "문서",
-    "text": "문서\n\n📄 EDA 보고서 — 분포·가중평균·변화·격차·회귀를 포함한 상세 분석\n📊 대시보드 — 핵심 지표와 시각화를 한눈에"
+    "section": "둘러보기",
+    "text": "둘러보기\n\n\n\n📊 인터랙티브 대시보드\n호버 툴팁이 있는 Rosling 버블 지도, 대륙별 추세, 수렴/발산, 정렬·검색 가능한 국가 테이블까지 한눈에.\n대시보드 열기 →\n\n\n📄 EDA 보고서\n분포 형태·인구가중 평균·변화와 역전·격차·회귀를 단계별로 설명하는 상세 분석 문서.\n보고서 열기 →"
   },
   {
     "objectID": "index.html#분석-구성",
     "href": "index.html#분석-구성",
     "title": "gapminder 탐색적 데이터 분석",
     "section": "분석 구성",
-    "text": "분석 구성\n\n\n\n\n\n\n\n단계\n내용\n\n\n\n\n데이터 품질 확인\n결측·중복·이상치·스키마 검증 (clean.R)\n\n\n탐색적 분석\n분포 형태, 인구가중 평균, 성장·역전, 수렴/발산, 회귀 (eda.R)\n\n\n리포팅\nQuarto 보고서 · 대시보드"
+    "text": "분석 구성\n\n\n\n\n\n\n\n\n단계\n산출물\n내용\n\n\n\n\n데이터 품질 확인\ncode/clean.R\n결측·중복·이상치·스키마 검증\n\n\n탐색적 분석\ncode/eda.R\n분포, 인구가중 평균, 성장·역전, 수렴/발산, 회귀\n\n\n리포팅\nQuarto 보고서 · 대시보드\n인터랙티브 시각화와 인사이트\n\n\n\n\n\n소스 코드: github.com/oseonmin/gapminder"
   },
   {
     "objectID": "document/eda_report.html",
     "href": "document/eda_report.html",
-    "title": "gapminder 탐색적 데이터 분석(EDA) 보고서",
+    "title": "gapminder 탐색적 데이터 분석",
     "section": "",
-    "text": "본 보고서는 data/gapminder.csv를 대상으로 한 탐색적 데이터 분석이다. 초판 EDA의 한계(단순평균의 편향, 분포 형태 미검토, 변화·역전·격차 분석 부재, 정량 모델 부재)를 비판적으로 보완했다. 모든 표·그래프는 본 문서 렌더 시 R 코드로 재현된다."
+    "text": "이 보고서는 data/gapminder.csv(142개국 · 1952–2007 · 5개 대륙)의 탐색적 데이터 분석이다. 초판의 한계(단순평균의 편향, 분포 형태 미검토, 변화·역전·격차 분석 부재, 정량 모델 부재)를 비판적으로 보완했으며, 모든 표·그래프는 렌더 시 R 코드로 재현된다. 👉 인터랙티브 대시보드에서 같은 분석을 한눈에 볼 수 있다."
   },
   {
-    "objectID": "document/eda_report.html#rosling-버블차트-2007",
-    "href": "document/eda_report.html#rosling-버블차트-2007",
-    "title": "gapminder 탐색적 데이터 분석(EDA) 보고서",
-    "section": "8.1 Rosling 버블차트 (2007)",
-    "text": "8.1 Rosling 버블차트 (2007)\n\n\n코드\nord &lt;- order(-d07$pop)\nbcex &lt;- 1 + 8 * sqrt(d07$pop[ord]) / sqrt(max(d07$pop))\nplot(d07$gdpPercap[ord], d07$lifeExp[ord], log = \"x\", pch = 21, cex = bcex, col = \"white\",\n     bg = adjustcolor(cont_col[as.character(d07$continent[ord])], 0.7),\n     xlab = \"gdpPercap (log scale)\", ylab = \"lifeExp\",\n     main = \"Rosling 버블차트 (2007)\")\nlegend(\"bottomright\", legend = cont_levels, pt.bg = cont_col, pch = 21, col = \"white\", bty = \"n\")\n\n\n\n\n\nGDP × 기대수명, 버블=인구, 색=대륙 (2007)"
+    "objectID": "document/eda_report.html#gdp-성장률cagr-상하위",
+    "href": "document/eda_report.html#gdp-성장률cagr-상하위",
+    "title": "gapminder 탐색적 데이터 분석",
+    "section": "5.1 GDP 성장률(CAGR) 상·하위",
+    "text": "5.1 GDP 성장률(CAGR) 상·하위\n\n\n코드 보기\nbind_rows(\n  chg |&gt; arrange(desc(CAGR)) |&gt; head(5) |&gt; mutate(구분=\"상위\"),\n  chg |&gt; arrange(CAGR) |&gt; head(5) |&gt; mutate(구분=\"하위\")) |&gt;\n  transmute(구분, 국가=country, 대륙=continent, CAGR=sprintf(\"%.2f%%\", CAGR*100)) |&gt;\n  knitr::kable()\n\n\n\n\n\n구분\n국가\n대륙\nCAGR\n\n\n\n\n상위\nEquatorial Guinea\nAfrica\n6.53%\n\n\n상위\nTaiwan\nAsia\n5.93%\n\n\n상위\nKorea, Rep.\nAsia\n5.84%\n\n\n상위\nSingapore\nAsia\n5.63%\n\n\n상위\nBotswana\nAfrica\n5.02%\n\n\n하위\nCongo, Dem. Rep.\nAfrica\n-1.86%\n\n\n하위\nKuwait\nAsia\n-1.50%\n\n\n하위\nHaiti\nAmericas\n-0.77%\n\n\n하위\nCentral African Republic\nAfrica\n-0.76%\n\n\n하위\nLiberia\nAfrica\n-0.60%"
+  },
+  {
+    "objectID": "document/eda_report.html#기대수명이-감소한-국가",
+    "href": "document/eda_report.html#기대수명이-감소한-국가",
+    "title": "gapminder 탐색적 데이터 분석",
+    "section": "5.2 기대수명이 감소한 국가",
+    "text": "5.2 기대수명이 감소한 국가\n\n\n코드 보기\nchg |&gt; filter(증감 &lt; 0) |&gt; arrange(증감) |&gt;\n  transmute(국가=country, 대륙=continent, `1952`=round(l1952,1), `2007`=round(l2007,1), `증감(세)`=증감) |&gt;\n  knitr::kable()\n\n\n\n\n\n국가\n대륙\n1952\n2007\n증감(세)\n\n\n\n\nZimbabwe\nAfrica\n48.5\n43.5\n-5.0\n\n\nSwaziland\nAfrica\n41.4\n39.6\n-1.8\n\n\n\n\n\n\n\n\n\n\n\n경고단순 평균이 가리는 것\n\n\n\n전 세계가 향상되는 가운데서도 짐바브웨·스와질란드는 기대수명이 후퇴했다 (에이즈 유행·분쟁·체제 붕괴). 전체 평균만 보면 놓치는 gapminder의 핵심 통찰이다."
   }
 ]

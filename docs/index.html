@@ -6,6 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="오선민">
 
 <title>gapminder 탐색적 데이터 분석 – gapminder EDA</title>
 <style>
@@ -42,7 +43,7 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-ff38ca5759cea8d2b4e40dc1c167d4da.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-00a51743468737d8efcce7488f178122.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -111,33 +112,29 @@ ul.task-list li input[type="checkbox"] {
     </nav>
 </header>
 <!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">목차</h2>
-   
-  <ul>
-  <li><a href="#프로젝트-개요" id="toc-프로젝트-개요" class="nav-link active" data-scroll-target="#프로젝트-개요">프로젝트 개요</a></li>
-  <li><a href="#문서" id="toc-문서" class="nav-link" data-scroll-target="#문서">문서</a></li>
-  <li><a href="#분석-구성" id="toc-분석-구성" class="nav-link" data-scroll-target="#분석-구성">분석 구성</a></li>
-  </ul>
-</nav>
-    </div>
+    
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content column-page" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title">gapminder 탐색적 데이터 분석</h1>
-<p class="subtitle lead">데이터 품질 확인부터 EDA · 대시보드까지</p>
+<p class="subtitle lead">데이터 품질 확인 · EDA · 인터랙티브 대시보드</p>
 </div>
 
 
 
-<div class="quarto-title-meta">
+<div class="quarto-title-meta column-page">
 
+    <div>
+    <div class="quarto-title-meta-heading">저자</div>
+    <div class="quarto-title-meta-contents">
+             <p>오선민 </p>
+          </div>
+  </div>
     
     <div>
     <div class="quarto-title-meta-heading">공개</div>
@@ -154,75 +151,89 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="프로젝트-개요" class="level2">
-<h2 class="anchored" data-anchor-id="프로젝트-개요">프로젝트 개요</h2>
-<p>이 사이트는 <strong>gapminder</strong> 데이터셋(<code>data/gapminder.csv</code>)에 대한 탐색적 데이터 분석(EDA) 결과를 담고 있습니다. 142개국 · 1952~2007년 · 5개 대륙의 인구, 기대수명, 1인당 GDP를 다룹니다.</p>
-<div class="cell">
-<div class="cell-output-display">
-<table class="caption-top table table-sm table-striped small">
-<thead>
-<tr class="header">
-<th style="text-align: left;">항목</th>
-<th style="text-align: left;">값</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">관측치</td>
-<td style="text-align: left;">1704행 × 6열</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">국가 수</td>
-<td style="text-align: left;">142</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">대륙 수</td>
-<td style="text-align: left;">5</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">분석 기간</td>
-<td style="text-align: left;">1952–2007</td>
-</tr>
-</tbody>
-</table>
+<div class="callout callout-style-simple callout-note no-icon">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Gapminder</strong> 데이터셋(142개국 · 1952–2007 · 5개 대륙)으로 인구, 기대수명, 1인당 GDP를 분석한 프로젝트입니다. 데이터 품질 확인부터 탐색적 분석, 인터랙티브 대시보드까지의 전 과정을 담았습니다.</p>
+</div>
+</div>
+</div>
+<section id="핵심-지표" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="핵심-지표">핵심 지표</h2>
+<div class="quarto-layout-panel" data-layout-ncol="3">
+<div class="quarto-layout-row">
+<section id="세계-기대수명" class="level3 card quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<h3 class="anchored" data-anchor-id="세계-기대수명">❤️ 세계 기대수명</h3>
+<p><strong>68.9세</strong> · 2007년 인구가중 평균</p>
+</section>
+<section id="년간-향상" class="level3 card quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<h3 class="anchored" data-anchor-id="년간-향상">📈 55년간 향상</h3>
+<p><strong>+20세</strong> · 1952 → 2007</p>
+</section>
+<section id="생명-격차" class="level3 card quarto-layout-cell" style="flex-basis: 33.3%;justify-content: flex-start;">
+<h3 class="anchored" data-anchor-id="생명-격차">⏳ 생명 격차</h3>
+<p><strong>43세</strong> · 최장수국 − 최단명국</p>
+</section>
 </div>
 </div>
 </section>
-<section id="문서" class="level2">
-<h2 class="anchored" data-anchor-id="문서">문서</h2>
-<ul>
-<li>📄 <a href="./document/eda_report.html"><strong>EDA 보고서</strong></a> — 분포·가중평균·변화·격차·회귀를 포함한 상세 분석</li>
-<li>📊 <a href="./document/eda_dashboard.html"><strong>대시보드</strong></a> — 핵심 지표와 시각화를 한눈에</li>
-</ul>
+<section id="둘러보기" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="둘러보기">둘러보기</h2>
+<div class="quarto-layout-panel" data-layout-ncol="2">
+<div class="quarto-layout-row">
+<section id="인터랙티브-대시보드" class="level3 card quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<h3 class="anchored" data-anchor-id="인터랙티브-대시보드">📊 인터랙티브 대시보드</h3>
+<p>호버 툴팁이 있는 Rosling 버블 지도, 대륙별 추세, 수렴/발산, 정렬·검색 가능한 국가 테이블까지 한눈에.</p>
+<p><a href="document/eda_dashboard.html">대시보드 열기 →</a></p>
 </section>
-<section id="분석-구성" class="level2">
-<h2 class="anchored" data-anchor-id="분석-구성">분석 구성</h2>
-<table class="caption-top table">
+<section id="eda-보고서" class="level3 card quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<h3 class="anchored" data-anchor-id="eda-보고서">📄 EDA 보고서</h3>
+<p>분포 형태·인구가중 평균·변화와 역전·격차·회귀를 단계별로 설명하는 상세 분석 문서.</p>
+<p><a href="document/eda_report.html">보고서 열기 →</a></p>
+</section>
+</div>
+</div>
+</section>
+<section id="분석-구성" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="분석-구성">분석 구성</h2>
+<table class="table-striped table-hover caption-top table">
 <colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
+<col style="width: 30%">
+<col style="width: 40%">
+<col style="width: 30%">
 </colgroup>
 <thead>
 <tr class="header">
 <th>단계</th>
+<th>산출물</th>
 <th>내용</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>데이터 품질 확인</td>
-<td>결측·중복·이상치·스키마 검증 (<code>clean.R</code>)</td>
+<td><strong>데이터 품질 확인</strong></td>
+<td><code>code/clean.R</code></td>
+<td>결측·중복·이상치·스키마 검증</td>
 </tr>
 <tr class="even">
-<td>탐색적 분석</td>
-<td>분포 형태, 인구가중 평균, 성장·역전, 수렴/발산, 회귀 (<code>eda.R</code>)</td>
+<td><strong>탐색적 분석</strong></td>
+<td><code>code/eda.R</code></td>
+<td>분포, 인구가중 평균, 성장·역전, 수렴/발산, 회귀</td>
 </tr>
 <tr class="odd">
-<td>리포팅</td>
+<td><strong>리포팅</strong></td>
 <td>Quarto 보고서 · 대시보드</td>
+<td>인터랙티브 시각화와 인사이트</td>
 </tr>
 </tbody>
 </table>
+<hr>
+<div style="text-align:center; color:#6b7177;">
+<p>소스 코드: <a href="https://github.com/oseonmin/gapminder">github.com/oseonmin/gapminder</a></p>
+</div>
 
 
 </section>

@@ -1,37 +1,90 @@
 ---
 title: "gapminder 탐색적 데이터 분석"
-subtitle: "데이터 품질 확인부터 EDA · 대시보드까지"
+subtitle: "데이터 품질 확인 · EDA · 인터랙티브 대시보드"
+author: "오선민"
 date: "2026-06-27"
 lang: ko
+format:
+  html:
+    theme: [cosmo, document/report.scss]
+    toc: false
+    page-layout: full
+execute:
+  echo: false
+  warning: false
+  message: false
 ---
 
-## 프로젝트 개요
-
-이 사이트는 **gapminder** 데이터셋(`data/gapminder.csv`)에 대한 탐색적 데이터 분석(EDA) 결과를 담고 있습니다.
-142개국 · 1952~2007년 · 5개 대륙의 인구, 기대수명, 1인당 GDP를 다룹니다.
-
-```{r}
-#| echo: false
+```{r setup}
+#| include: false
+suppressPackageStartupMessages({ library(dplyr); library(scales) })
 data_path <- if (file.exists("data/gapminder.csv")) "data/gapminder.csv" else "../data/gapminder.csv"
 df <- read.csv(data_path, stringsAsFactors = FALSE)
-knitr::kable(data.frame(
-  항목 = c("관측치", "국가 수", "대륙 수", "분석 기간"),
-  값 = c(sprintf("%d행 × %d열", nrow(df), ncol(df)),
-         length(unique(df$country)),
-         length(unique(df$continent)),
-         sprintf("%d–%d", min(df$year), max(df$year)))
-))
+d07 <- filter(df, year == 2007)
+life_w  <- round(weighted.mean(d07$lifeExp, d07$pop), 1)
+gain    <- round(weighted.mean(d07$lifeExp, d07$pop) -
+                 weighted.mean(filter(df, year==1952)$lifeExp, filter(df, year==1952)$pop), 1)
+gap     <- round(max(d07$lifeExp) - min(d07$lifeExp), 1)
 ```
 
-## 문서
+::: {.callout-note appearance="simple" icon=false}
+**Gapminder** 데이터셋(142개국 · 1952–2007 · 5개 대륙)으로 인구, 기대수명, 1인당 GDP를 분석한 프로젝트입니다.
+데이터 품질 확인부터 탐색적 분석, 인터랙티브 대시보드까지의 전 과정을 담았습니다.
+:::
 
-- 📄 [**EDA 보고서**](document/eda_report.qmd) — 분포·가중평균·변화·격차·회귀를 포함한 상세 분석
-- 📊 [**대시보드**](document/eda_dashboard.qmd) — 핵심 지표와 시각화를 한눈에
+## 핵심 지표 {.unnumbered}
 
-## 분석 구성
+::: {layout-ncol=3}
 
-| 단계 | 내용 |
-|------|------|
-| 데이터 품질 확인 | 결측·중복·이상치·스키마 검증 (`clean.R`) |
-| 탐색적 분석 | 분포 형태, 인구가중 평균, 성장·역전, 수렴/발산, 회귀 (`eda.R`) |
-| 리포팅 | Quarto 보고서 · 대시보드 |
+::: {.card}
+### ❤️ 세계 기대수명
+**`r life_w`세** · 2007년 인구가중 평균
+:::
+
+::: {.card}
+### 📈 55년간 향상
+**+`r gain`세** · 1952 → 2007
+:::
+
+::: {.card}
+### ⏳ 생명 격차
+**`r gap`세** · 최장수국 − 최단명국
+:::
+
+:::
+
+## 둘러보기 {.unnumbered}
+
+::: {layout-ncol=2}
+
+::: {.card}
+### 📊 인터랙티브 대시보드
+호버 툴팁이 있는 Rosling 버블 지도, 대륙별 추세, 수렴/발산, 정렬·검색 가능한 국가 테이블까지 한눈에.
+
+[대시보드 열기 →](document/eda_dashboard.html)
+:::
+
+::: {.card}
+### 📄 EDA 보고서
+분포 형태·인구가중 평균·변화와 역전·격차·회귀를 단계별로 설명하는 상세 분석 문서.
+
+[보고서 열기 →](document/eda_report.html)
+:::
+
+:::
+
+## 분석 구성 {.unnumbered}
+
+| 단계 | 산출물 | 내용 |
+|------|--------|------|
+| **데이터 품질 확인** | `code/clean.R` | 결측·중복·이상치·스키마 검증 |
+| **탐색적 분석** | `code/eda.R` | 분포, 인구가중 평균, 성장·역전, 수렴/발산, 회귀 |
+| **리포팅** | Quarto 보고서 · 대시보드 | 인터랙티브 시각화와 인사이트 |
+
+: {.striped .hover}
+
+---
+
+::: {style="text-align:center; color:#6b7177;"}
+소스 코드: [github.com/oseonmin/gapminder](https://github.com/oseonmin/gapminder)
+:::

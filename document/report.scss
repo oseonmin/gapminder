@@ -1,0 +1,63 @@
+/*-- scss:defaults --*/
+$font-family-sans-serif: "Segoe UI", system-ui, -apple-system, "Malgun Gothic", sans-serif !default;
+$font-size-root: 16px !default;
+$primary: #0F4C81 !default;
+$body-bg: #ffffff !default;
+$body-color: #2b2f33 !default;
+$link-color: #0F4C81 !default;
+$toc-color: #5b6166 !default;
+$h1-font-size: 1.9rem;
+$h2-font-size: 1.42rem;
+$h3-font-size: 1.12rem;
+
+/*-- scss:rules --*/
+body { letter-spacing: -0.003em; line-height: 1.7; }
+
+/* 타이틀 블록 */
+#title-block-header.quarto-title-block .quarto-title .title {
+  font-weight: 800; letter-spacing: -0.02em; color: #0F4C81;
+}
+.quarto-title-block .subtitle { color: #5b6166; font-weight: 500; }
+.quarto-title-banner { background: linear-gradient(135deg, #0F4C81 0%, #2A6F97 100%); }
+
+/* 섹션 헤딩 */
+h2 {
+  font-weight: 700; letter-spacing: -0.015em;
+  margin-top: 2.4rem; padding-bottom: .35rem;
+  border-bottom: 2px solid #eef1f4;
+}
+h3 { font-weight: 650; color: #34495e; margin-top: 1.6rem; }
+
+/* 본문 강조 */
+strong { color: #0F4C81; font-weight: 700; }
+
+/* 콜아웃(인사이트) */
+.callout { border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+.callout.callout-style-default { border-left-width: 5px; }
+
+/* 표 */
+table.table {
+  font-size: .92rem;
+  border-collapse: separate; border-spacing: 0;
+}
+.table > thead { border-bottom: 2px solid #dfe3e8; }
+.table > thead th { font-weight: 700; color: #34495e; }
+.table > tbody tr:nth-of-type(odd) { background: #f8fafc; }
+.table > tbody tr:hover { background: #eef4fb; }
+
+/* 코드 접기 버튼 톤 */
+.quarto-title-meta { color: #5b6166; }
+details > summary { color: #0F4C81; }
+
+/* TOC */
+nav#TOC .active { font-weight: 700; }
+nav#TOC { border-left: 2px solid #eef1f4; }
+
+/* 그림 캡션 */
+figure figcaption, .figure-caption { color: #6b7177; font-size: .85rem; }
+
+/* 인용 박스 */
+blockquote {
+  border-left: 4px solid #2A6F97; background: #f4f8fc;
+  padding: .6rem 1rem; border-radius: 0 8px 8px 0; color: #34495e;
+}
