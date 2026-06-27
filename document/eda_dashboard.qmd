@@ -78,19 +78,19 @@ m1 <- lm(lifeExp ~ log(gdpPercap), data = df); r2 <- summary(m1)$r.squared
 ```{r}
 #| content: valuebox
 #| title: "세계 기대수명 (2007, 인구가중)"
-list(icon = "heart-pulse-fill", color = "primary", value = sprintf("%.1f세", life_2007_w))
+list(icon = "heart-pulse", color = "#0F4C81", value = sprintf("%.1f세", life_2007_w))
 ```
 
 ```{r}
 #| content: valuebox
 #| title: "55년간 향상 (1952→2007)"
-list(icon = "graph-up-arrow", color = "success", value = sprintf("+%.1f세", life_gain))
+list(icon = "graph-up-arrow", color = "#2A9D8F", value = sprintf("+%.1f세", life_gain))
 ```
 
 ```{r}
 #| content: valuebox
 #| title: "생명 격차 (최장수국−최단명국)"
-list(icon = "hourglass-split", color = "danger", value = sprintf("%.1f세", life_gap))
+list(icon = "hourglass-split", color = "#BC4749", value = sprintf("%.1f세", life_gap))
 ```
 
 ## Row {height="72%"}
