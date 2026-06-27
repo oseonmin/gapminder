@@ -8,6 +8,7 @@ format:
     theme: cosmo
     nav-buttons: [github]
     orientation: rows
+    embed-resources: true
 execute:
   echo: false
   warning: false

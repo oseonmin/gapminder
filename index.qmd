@@ -1,0 +1,37 @@
+---
+title: "gapminder 탐색적 데이터 분석"
+subtitle: "데이터 품질 확인부터 EDA · 대시보드까지"
+date: "2026-06-27"
+lang: ko
+---
+
+## 프로젝트 개요
+
+이 사이트는 **gapminder** 데이터셋(`data/gapminder.csv`)에 대한 탐색적 데이터 분석(EDA) 결과를 담고 있습니다.
+142개국 · 1952~2007년 · 5개 대륙의 인구, 기대수명, 1인당 GDP를 다룹니다.
+
+```{r}
+#| echo: false
+data_path <- if (file.exists("data/gapminder.csv")) "data/gapminder.csv" else "../data/gapminder.csv"
+df <- read.csv(data_path, stringsAsFactors = FALSE)
+knitr::kable(data.frame(
+  항목 = c("관측치", "국가 수", "대륙 수", "분석 기간"),
+  값 = c(sprintf("%d행 × %d열", nrow(df), ncol(df)),
+         length(unique(df$country)),
+         length(unique(df$continent)),
+         sprintf("%d–%d", min(df$year), max(df$year)))
+))
+```
+
+## 문서
+
+- 📄 [**EDA 보고서**](document/eda_report.qmd) — 분포·가중평균·변화·격차·회귀를 포함한 상세 분석
+- 📊 [**대시보드**](document/eda_dashboard.qmd) — 핵심 지표와 시각화를 한눈에
+
+## 분석 구성
+
+| 단계 | 내용 |
+|------|------|
+| 데이터 품질 확인 | 결측·중복·이상치·스키마 검증 (`clean.R`) |
+| 탐색적 분석 | 분포 형태, 인구가중 평균, 성장·역전, 수렴/발산, 회귀 (`eda.R`) |
+| 리포팅 | Quarto 보고서 · 대시보드 |

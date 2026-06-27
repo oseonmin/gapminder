@@ -2,3 +2,13 @@
 .Rhistory
 .RData
 .Ruserdata
+
+/.quarto/
+**/*.quarto_ipynb
+
+# Quarto standalone 렌더 잔여물 (프로젝트 출력은 docs/ 로 감)
+/document/*.html
+/document/*_files/
+
+# 로컬 에디터/도구 설정
+/.claude/settings.local.json

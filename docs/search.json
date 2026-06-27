@@ -1,0 +1,44 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "gapminder 탐색적 데이터 분석",
+    "section": "",
+    "text": "이 사이트는 gapminder 데이터셋(data/gapminder.csv)에 대한 탐색적 데이터 분석(EDA) 결과를 담고 있습니다. 142개국 · 1952~2007년 · 5개 대륙의 인구, 기대수명, 1인당 GDP를 다룹니다.\n\n\n\n\n\n항목\n값\n\n\n\n\n관측치\n1704행 × 6열\n\n\n국가 수\n142\n\n\n대륙 수\n5\n\n\n분석 기간\n1952–2007"
+  },
+  {
+    "objectID": "index.html#프로젝트-개요",
+    "href": "index.html#프로젝트-개요",
+    "title": "gapminder 탐색적 데이터 분석",
+    "section": "",
+    "text": "이 사이트는 gapminder 데이터셋(data/gapminder.csv)에 대한 탐색적 데이터 분석(EDA) 결과를 담고 있습니다. 142개국 · 1952~2007년 · 5개 대륙의 인구, 기대수명, 1인당 GDP를 다룹니다.\n\n\n\n\n\n항목\n값\n\n\n\n\n관측치\n1704행 × 6열\n\n\n국가 수\n142\n\n\n대륙 수\n5\n\n\n분석 기간\n1952–2007"
+  },
+  {
+    "objectID": "index.html#문서",
+    "href": "index.html#문서",
+    "title": "gapminder 탐색적 데이터 분석",
+    "section": "문서",
+    "text": "문서\n\n📄 EDA 보고서 — 분포·가중평균·변화·격차·회귀를 포함한 상세 분석\n📊 대시보드 — 핵심 지표와 시각화를 한눈에"
+  },
+  {
+    "objectID": "index.html#분석-구성",
+    "href": "index.html#분석-구성",
+    "title": "gapminder 탐색적 데이터 분석",
+    "section": "분석 구성",
+    "text": "분석 구성\n\n\n\n\n\n\n\n단계\n내용\n\n\n\n\n데이터 품질 확인\n결측·중복·이상치·스키마 검증 (clean.R)\n\n\n탐색적 분석\n분포 형태, 인구가중 평균, 성장·역전, 수렴/발산, 회귀 (eda.R)\n\n\n리포팅\nQuarto 보고서 · 대시보드"
+  },
+  {
+    "objectID": "document/eda_report.html",
+    "href": "document/eda_report.html",
+    "title": "gapminder 탐색적 데이터 분석(EDA) 보고서",
+    "section": "",
+    "text": "본 보고서는 data/gapminder.csv를 대상으로 한 탐색적 데이터 분석이다. 초판 EDA의 한계(단순평균의 편향, 분포 형태 미검토, 변화·역전·격차 분석 부재, 정량 모델 부재)를 비판적으로 보완했다. 모든 표·그래프는 본 문서 렌더 시 R 코드로 재현된다."
+  },
+  {
+    "objectID": "document/eda_report.html#rosling-버블차트-2007",
+    "href": "document/eda_report.html#rosling-버블차트-2007",
+    "title": "gapminder 탐색적 데이터 분석(EDA) 보고서",
+    "section": "8.1 Rosling 버블차트 (2007)",
+    "text": "8.1 Rosling 버블차트 (2007)\n\n\n코드\nord &lt;- order(-d07$pop)\nbcex &lt;- 1 + 8 * sqrt(d07$pop[ord]) / sqrt(max(d07$pop))\nplot(d07$gdpPercap[ord], d07$lifeExp[ord], log = \"x\", pch = 21, cex = bcex, col = \"white\",\n     bg = adjustcolor(cont_col[as.character(d07$continent[ord])], 0.7),\n     xlab = \"gdpPercap (log scale)\", ylab = \"lifeExp\",\n     main = \"Rosling 버블차트 (2007)\")\nlegend(\"bottomright\", legend = cont_levels, pt.bg = cont_col, pch = 21, col = \"white\", bty = \"n\")\n\n\n\n\n\nGDP × 기대수명, 버블=인구, 색=대륙 (2007)"
+  }
+]

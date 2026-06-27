@@ -1,0 +1,29 @@
+project:
+  type: website
+  output-dir: docs
+  render:
+    - index.qmd
+    - document/eda_report.qmd
+    - document/eda_dashboard.qmd
+
+website:
+  title: "gapminder EDA"
+  navbar:
+    background: primary
+    left:
+      - href: index.qmd
+        text: 홈
+      - href: document/eda_report.qmd
+        text: EDA 보고서
+      - href: document/eda_dashboard.qmd
+        text: 대시보드
+  page-footer:
+    center: "gapminder 탐색적 데이터 분석 · 2026"
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-title: "목차"
+    code-fold: true
+    embed-resources: false
